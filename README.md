@@ -1,50 +1,105 @@
-# Holohacks — Deploy Instructions
+# Holohacks — Master Deploy Guide
 
-What's in this folder:
+This is the one README to actually use. It replaces every earlier version, everything below reflects the current, real state of the project, not a changelog of how it got here.
 
-- `index.html` — the whole app, one file, CSS and JS inlined (same pattern as your other sites, no relative-path 404 risk)
-- `api/fix.js` — the one piece of backend. Holds your Anthropic API key server-side and talks to Claude. Without this, the frontend has nowhere safe to put the key.
-- `manifest.json` + `sw.js` + `icon-192.png` + `icon-512.png` — what makes this installable to a home screen on iPhone and Android, not just openable in a browser
+---
 
-## Step 1 — Get an Anthropic API key
+## What Holohacks Is
 
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. Create an API key
-3. Keep it somewhere private for a moment — you'll paste it into Vercel, never into any file that goes to GitHub
+Describe a task (a repair, a recipe question, an assembly problem, a daily annoyance, or wanting to learn a skill), or attach a photo. Get one clear, concrete step, adapted to your actual tools, ingredients, and experience level. Say what happened. Get the next step. Not a wall of instructions up front, a real back-and-forth.
 
-## Step 2 — Push this folder to GitHub
+---
 
-Same as your other projects:
+## Site Structure
 
-1. Create a new repo (e.g. `holohacks-app`)
-2. Upload all the files in this folder, keeping the `api/` folder structure intact (the `fix.js` file must stay inside a folder literally named `api`, Vercel uses that to know it's a backend function)
+Two layers, same idea as Ploy's site or Anthropic's (anthropic.com explains it, claude.ai is the tool):
 
-## Step 3 — Deploy on Vercel
+```
+/index.html              <- marketing homepage. Explains the product. Does not call the AI.
+/sw.js                   <- service worker, covers both pages, enables "Add to Home Screen"
+/icon-192.png
+/icon-512.png
+/app/
+  index.html               <- the actual tool: task intake, step-by-step guidance, paywall
+  manifest.json            <- PWA manifest, installs THIS page to the home screen
+/api/
+  fix.js                    <- serverless function, holds your Anthropic key, talks to Claude
+  verify-payment.js         <- serverless function, confirms a Stripe payment actually happened
+```
 
-1. Import the repo into Vercel, same as before
-2. Before the first deploy finishes, go to the project's **Settings → Environment Variables**
-3. Add one: name it `ANTHROPIC_API_KEY`, paste your key as the value
-4. Redeploy (Vercel usually prompts you to, or push any small change to trigger it)
+**Homepage (`/`):** headline, how it works, what it covers, why it's not just "ask a chatbot," pricing. Every "Try it free" button links to `/app/`.
 
-## Step 4 — Test it
+**The tool (`/app/`):** the working product. Five task-type chips (Fix, Cook, Build/assemble, Daily hack, Learn a skill) and an experience-level picker (New to this / Some experience / Confident), both optional, both sharpen the guidance when set. The backend prompt adapts on both axes, a cooking session treats your actual ingredients as fixed constraints, a "confident" user gets terse steps, a "new to this" user gets more scaffolding.
 
-1. Open the live Vercel URL on your phone
-2. Try describing a fake problem, confirm you get one step back, not a wall of text
-3. If it fails, check Vercel's **Deployments → Functions logs** — the most common issue is the env var name being slightly off, or the `api` folder not being named exactly `api`
+**Safety cutoff, built in on purpose:** for genuine hazards (gas, live electrical wiring, structural work, undercooked poultry/pork, a compromised canning seal), the app says plainly that this needs a professional or a checked approach and stops giving DIY steps for that specific part. This isn't optional politeness, it's the one thing the app should never gloss over.
 
-## Step 5 — Install to home screen (this is your "app" without an app store)
+---
 
-- **iPhone:** open the URL in Safari (must be Safari, not Chrome) → tap Share → "Add to Home Screen"
-- **Android:** open in Chrome → it will usually prompt "Install app" on its own, or tap the three-dot menu → "Install app"
+## Deploying From Scratch
 
-Once installed, it opens full-screen with its own icon, no browser bar. That's the app.
+### Step 1 — Get an Anthropic API key
+Go to [console.anthropic.com](https://console.anthropic.com), create a key, keep it private. You'll paste it into Vercel, never into any file that goes to GitHub.
 
-## What's NOT done yet, in order of what matters most for MRR
+### Step 2 — Push everything to GitHub
+Create a repo (e.g. `holohacks-app`), upload the full folder structure above exactly as shown. The `api/` folder must be named exactly `api`, that's how Vercel knows those are backend functions rather than pages.
 
-1. **The paywall button doesn't charge anyone yet.** It's a locked screen with no Stripe behind it. This is the next real step before you can call this "generating revenue."
-2. **No user accounts.** Right now "3 free fixes" resets every time someone reloads the page. Fine for a first test, not fine once you're charging.
-3. **No image compression.** Large photos will work but will be slow and use more API cost than needed. Fine for now.
+### Step 3 — Deploy on Vercel
+Import the repo. Before or right after the first deploy, go to **Settings → Environment Variables** and add:
+- `ANTHROPIC_API_KEY` — your key from Step 1
+- `STRIPE_SECRET_KEY` — see the Stripe section below (can be added later, once you get there)
 
-## What IS done
+Redeploy after adding variables (push any small change, or use Vercel's redeploy button).
 
-The actual product loop — describe or photograph a problem, get one real step at a time, paywall after 3 — is real and working end to end once your API key is in place. That's the thing worth testing with actual people before spending more time on billing or accounts.
+### Step 4 — Test it
+Open the live URL. Confirm the homepage loads at `/`, and tapping "Try it free" lands you in the actual tool at `/app/`. Try all five task types once each (a repair, a recipe, an assembly problem, a daily annoyance, a "teach me X"), and confirm the tone actually shifts between "new to this" and "confident" on the same task. If a request fails, check Vercel's **Deployments → Functions logs**, the most common issue is an environment variable name being slightly off.
+
+### Step 5 — Install to home screen
+This is what makes it feel like "an app" without an app store:
+- **iPhone:** open `/app/` specifically in Safari (must be Safari, not Chrome) → Share → "Add to Home Screen"
+- **Android:** open `/app/` in Chrome → it usually prompts "Install app" on its own, or use the three-dot menu
+
+It has to be done from `/app/`, not the homepage, because that's where the manifest lives.
+
+---
+
+## Setting Up Stripe (so the paywall actually charges someone)
+
+1. **Sign up at stripe.com in Safari.** It's a website, not an app to install.
+2. **Create a Product:** Products → Add product. Name it "Holohacks Unlimited," recurring, $6.99/month (or whatever you land on).
+3. **Create a Payment Link** for that product. Stripe gives you a real checkout URL (`https://buy.stripe.com/xxxxx`). Stripe hosts the card entry, you never touch or store card details yourself.
+4. **Set the after-payment redirect** in the Payment Link's settings, under "After payment" → "Redirect customers to your website":
+   ```
+   https://your-deployed-site.vercel.app/app/?session_id={CHECKOUT_SESSION_ID}
+   ```
+   Note this points to `/app/`, not the root, because that's where the payment-verification check actually runs.
+5. **Paste the Payment Link** into `/app/index.html`, replacing the placeholder text `STRIPE_PAYMENT_LINK_GOES_HERE` (it's the "Unlock unlimited" button on the paywall screen).
+6. **Add `STRIPE_SECRET_KEY` to Vercel:** in Stripe, Developers → API keys, copy the **secret** key (not the publishable one). Add it in Vercel the same way you added `ANTHROPIC_API_KEY`.
+7. **Redeploy, then test the whole loop yourself:** use up your 3 free tasks, hit the paywall, tap "Unlock unlimited," pay with a real card (or Stripe's test card `4242 4242 4242 4242` while testing), confirm you land back in `/app/` with "Unlimited — unlocked" in the header.
+
+### How you'll know someone is actually paying
+No separate analytics tool needed. Log into stripe.com in Safari, the Dashboard shows your MRR directly, plus a Customers tab and a Subscriptions tab (active vs. canceled). That's your real-time source of truth.
+
+### The honest limitation of this payment flow
+It confirms "did this browser just complete a real checkout," which stops people from faking the URL to unlock free. It does not, right now, re-check weeks later whether a subscription is still active, that would need a small database, worth building once you have real subscribers to justify it, not before. If someone cancels, you'd see it in Stripe, but the app wouldn't automatically re-lock their specific device yet.
+
+---
+
+## What's Actually Done vs. Still Open
+
+**Done and working end to end, once your keys are in place:**
+- The full task loop (describe/photograph → one step at a time → adapts to your reply)
+- Free-fix count that persists across visits (localStorage, not reset on reload)
+- Real Stripe payment verification unlocking unlimited use
+- Installable to home screen on iPhone and Android
+- Two-layer site (marketing homepage + tool)
+
+**Still open, roughly in order of what matters next:**
+1. Subscription cancellations don't automatically re-lock a device (needs a small database, see above)
+2. No image compression, large photos work but are slower and cost more API usage than needed
+3. No accounts, so switching phones or clearing browser data resets someone's free-fix count and unlock status
+
+---
+
+## Marketing This, Concretely
+
+Post a real screen recording of a real task solved start to finish (a fix, a recipe, an assembly) in places where people already discuss that exact problem: relevant subreddits (r/HomeImprovement, r/Cooking, r/DIY depending on the clip), local Facebook groups, TikTok. One specific, honest demonstration beats a general "check out my app" post. A direct side-by-side against asking a general AI chatbot (wall of steps vs. one step that adapts) is also honest marketing, because it's the real differentiator. Once you have a few clips, point them at the homepage above rather than a bare `/app/` link, that's what it's there for.
