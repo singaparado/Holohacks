@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Holohacks — Get It Done</title>
+
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#2B2A28" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Holohacks" />
+<link rel="apple-touch-icon" href="/icon-192.png" />
+<link rel="icon" href="/icon-192.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --graphite:#2B2A28;
+    --paper:#EDEAE3;
+    --card:#F7F5F0;
+    --amber:#E8A93A;
+    --muted:#6b6862;
+    --muted2:#5c5952;
+    --line:#DDD8CC;
+    --error:#a3402f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--graphite);font-family:'IBM Plex Mono', monospace;min-height:100vh;}
+  .wrap{max-width:640px;margin:0 auto;padding:32px 20px 80px;}
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+  .brand{display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.15em;text-transform:uppercase;}
+  .brand .dot{color:var(--amber);}
+  .counter{font-size:11px;color:var(--muted);}
+  h1{font-family:Georgia,serif;font-size:29px;line-height:1.15;margin:0 0 8px;}
+  p.sub{font-size:13px;color:var(--muted2);margin:0 0 20px;line-height:1.5;}
+
+  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin:22px 0 10px;}
+  .section-label:first-of-type{margin-top:0;}
+
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;}
+  .chip{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 13px;border:1px solid var(--graphite);
+    background:var(--card);cursor:pointer;border-radius:2px;
+  }
+  .chip.active{background:var(--graphite);color:var(--paper);}
+  .chip .emoji{margin-right:5px;}
+
+  textarea{
+    width:100%;padding:14px;margin-bottom:4px;font-size:13px;font-family:'IBM Plex Mono',monospace;
+    border:1px solid var(--graphite);background:var(--card);resize:none;min-height:100px;
+  }
+  .row{display:flex;gap:10px;margin:16px 0;}
+  button{font-family:'IBM Plex Mono',monospace;font-size:13px;cursor:pointer;border:1px solid var(--graphite);background:transparent;padding:10px 16px;}
+  button.primary{flex:1;background:var(--graphite);color:var(--paper);border:none;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.05em;}
+  button.primary:disabled{opacity:.6;cursor:default;}
+  .imgpreview{position:relative;border:1px solid var(--graphite);margin-bottom:14px;}
+  .imgpreview img{width:100%;max-height:240px;object-fit:cover;display:block;}
+  .imgpreview .remove{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);border:none;padding:4px 8px;}
+  .error{color:var(--error);font-size:12px;margin-top:4px;}
+
+  .step{position:relative;padding:16px;border:1px solid var(--graphite);background:var(--card);margin-bottom:16px;}
+  .tag{position:absolute;top:-11px;left:14px;background:var(--amber);color:var(--graphite);font-size:10px;text-transform:uppercase;letter-spacing:.13em;padding:2px 8px;white-space:nowrap;}
+  .step p{font-size:13px;line-height:1.6;margin:8px 0 0;white-space:pre-wrap;}
+  .replybubble{margin-left:32px;padding:10px 14px;background:var(--line);font-size:13px;margin-bottom:16px;}
+  .thinking{font-size:11px;color:var(--muted);margin-bottom:12px;}
+
+  .replyrow{display:flex;gap:8px;margin-bottom:10px;}
+  .replyrow input{flex:1;padding:12px;font-size:13px;border:1px solid var(--graphite);background:var(--card);font-family:'IBM Plex Mono',monospace;}
+  .linklike{font-size:11px;color:var(--muted2);text-decoration:underline;background:none;border:none;padding:0;cursor:pointer;}
+
+  .paywall{text-align:center;padding:60px 0;}
+  .lock{font-size:32px;margin-bottom:12px;}
+  .paywall h2{font-family:Georgia,serif;font-size:24px;margin:0 0 8px;}
+  .paywall p{font-size:13px;color:var(--muted2);margin:0 0 24px;}
+  .unlockbtn{background:var(--graphite);color:var(--paper);padding:14px 28px;text-transform:uppercase;letter-spacing:.05em;border:none;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const FREE_FIX_LIMIT = 3;
+
+const CATEGORIES = [
+  { key: "fix",   label: "Fix something",     emoji: "\u{1F527}" },
+  { key: "cook",  label: "Cook something",    emoji: "\u{1F373}" },
+  { key: "build", label: "Build / assemble",  emoji: "\u{1F4E6}" },
+  { key: "solve", label: "Daily hack",         emoji: "\u{1F4A1}" },
+  { key: "learn", label: "Learn a skill",      emoji: "\u{1F393}" },
+];
+
+const LEVELS = [
+  { key: "new",       label: "New to this" },
+  { key: "some",      label: "Some experience" },
+  { key: "confident", label: "Pretty confident" },
+];
+
+const STORAGE_KEYS = {
+  fixesStarted: "holohacks_fixes_started",
+  unlocked: "holohacks_unlocked",
+};
+
+function loadFixesStarted() {
+  const raw = localStorage.getItem(STORAGE_KEYS.fixesStarted);
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) ? n : 0;
+}
+function saveFixesStarted(n) {
+  localStorage.setItem(STORAGE_KEYS.fixesStarted, String(n));
+}
+function isUnlocked() {
+  return localStorage.getItem(STORAGE_KEYS.unlocked) === "true";
+}
+function setUnlocked() {
+  localStorage.setItem(STORAGE_KEYS.unlocked, "true");
+}
+
+let state = {
+  screen: "start",
+  category: null,
+  level: null,
+  problemText: "",
+  imageBase64: null,
+  imagePreview: null,
+  messages: [],
+  displaySteps: [],
+  replyText: "",
+  loading: false,
+  fixesStarted: loadFixesStarted(),
+  unlocked: isUnlocked(),
+  verifyingPayment: false,
+  error: null,
+};
+
+function setState(patch) { state = { ...state, ...patch }; render(); }
+
+// On load, check whether we just came back from a successful Stripe payment.
+// Stripe's Payment Link redirects here with ?session_id=... when configured
+// to do so (see README). We verify that session server-side before unlocking,
+// so a person can't just type ?session_id=anything into the URL to unlock free.
+async function checkForReturningPayment() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session_id");
+  if (!sessionId || state.unlocked) return;
+
+  setState({ verifyingPayment: true });
+  try {
+    const res = await fetch("/api/verify-payment?session_id=" + encodeURIComponent(sessionId));
+    const data = await res.json();
+    if (data && data.paid) {
+      setUnlocked();
+      setState({ unlocked: true, verifyingPayment: false, screen: "start" });
+    } else {
+      setState({ verifyingPayment: false, error: "We couldn't confirm that payment yet. If you were just charged, refresh in a minute." });
+    }
+  } catch (e) {
+    setState({ verifyingPayment: false, error: "Couldn't verify payment. Refresh and try again." });
+  }
+  // Clean the URL so a reload doesn't re-trigger verification.
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+async function callBackend(messages, meta) {
+  const res = await fetch("/api/fix", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages, meta }),
+  });
+  if (!res.ok) throw new Error("Request failed");
+  const data = await res.json();
+  return data.text;
+}
+
+function handleImagePick(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = reader.result;
+    setState({ imageBase64: result.split(",")[1], imagePreview: result });
+  };
+  reader.onerror = () => setState({ error: "Could not read that image. Try again." });
+  reader.readAsDataURL(file);
+}
+
+async function startFix() {
+  if (!state.problemText.trim() && !state.imageBase64) {
+    setState({ error: "Describe what you're trying to do, or attach a photo, first." });
+    return;
+  }
+  if (!state.unlocked && state.fixesStarted >= FREE_FIX_LIMIT) { setState({ screen: "paywall" }); return; }
+  setState({ error: null, loading: true });
+
+  const content = [];
+  if (state.imageBase64) {
+    content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: state.imageBase64 } });
+  }
+  content.push({ type: "text", text: state.problemText.trim() || "See attached photo. Help me figure out what I'm dealing with and what to do." });
+
+  const newMessages = [{ role: "user", content }];
+  const meta = { category: state.category || "solve", level: state.level || "some" };
+
+  try {
+    const reply = await callBackend(newMessages, meta);
+    const nextCount = state.fixesStarted + 1;
+    saveFixesStarted(nextCount);
+    setState({
+      messages: [...newMessages, { role: "assistant", content: reply }],
+      displaySteps: [{ type: "auto", text: reply }],
+      fixesStarted: nextCount,
+      screen: "session",
+      loading: false,
+    });
+  } catch (e) {
+    setState({ error: "Couldn't reach the guide. Check your connection and try again.", loading: false });
+  }
+}
+
+async function sendReply() {
+  if (!state.replyText.trim()) return;
+  const userReply = state.replyText.trim();
+  setState({ loading: true, error: null, replyText: "" });
+
+  const newMessages = [...state.messages, { role: "user", content: userReply }];
+  const meta = { category: state.category || "solve", level: state.level || "some" };
+
+  try {
+    const reply = await callBackend(newMessages, meta);
+    setState({
+      messages: [...newMessages, { role: "assistant", content: reply }],
+      displaySteps: [...state.displaySteps, { type: "reply", text: userReply }, { type: "auto", text: reply }],
+      loading: false,
+    });
+  } catch (e) {
+    setState({ error: "Couldn't reach the guide. Check your connection and try again.", loading: false });
+  }
+}
+
+function resetToStart() {
+  const shouldPaywall = !state.unlocked && state.fixesStarted >= FREE_FIX_LIMIT;
+  setState({
+    screen: shouldPaywall ? "paywall" : "start",
+    category: null, level: null,
+    problemText: "", imageBase64: null, imagePreview: null,
+    messages: [], displaySteps: [], replyText: "", error: null,
+  });
+}
+
+function categoryTagLabel(key) {
+  const c = CATEGORIES.find(c => c.key === key);
+  return c ? c.label.split(" ")[0].toUpperCase() : "TASK";
+}
+
+function render() {
+  const app = document.getElementById("app");
+
+  let html = `
+    <div class="header">
+      <div class="brand"><span class="dot">\u25C6</span> Holohacks</div>
+      <div class="counter">${state.unlocked ? "Unlimited \u2014 unlocked" : Math.min(state.fixesStarted, FREE_FIX_LIMIT) + "/" + FREE_FIX_LIMIT + " free used"}</div>
+    </div>
+  `;
+
+  if (state.screen === "start") {
+    html += `
+      <h1>What do you need to get done?</h1>
+      <p class="sub">Fixing something broken, cooking a meal, assembling furniture, or solving one of those small daily annoyances — describe it, or attach a photo. You'll get one clear step at a time, adapted to what you actually have.</p>
+
+      <div class="section-label">What kind of task</div>
+      <div class="chiprow">
+        ${CATEGORIES.map(c => `
+          <div class="chip ${state.category === c.key ? "active" : ""}" data-cat="${c.key}">
+            <span class="emoji">${c.emoji}</span>${c.label}
+          </div>`).join("")}
+      </div>
+
+      <div class="section-label">Your experience with this kind of thing</div>
+      <div class="chiprow">
+        ${LEVELS.map(l => `
+          <div class="chip ${state.level === l.key ? "active" : ""}" data-level="${l.key}">${l.label}</div>`).join("")}
+      </div>
+
+      <div class="section-label">Describe it</div>
+      ${state.imagePreview ? `
+        <div class="imgpreview">
+          <img src="${state.imagePreview}" />
+          <button class="remove" id="removeImgBtn">\u2715</button>
+        </div>` : ""}
+      <textarea id="problemInput" placeholder="e.g. Dishwasher won't drain / What can I cook with chicken thighs, rice, and half an onion / IKEA shelf, missing one bracket">${state.problemText}</textarea>
+
+      <div class="row">
+        <input type="file" id="fileInput" accept="image/*" style="display:none" />
+        <button id="attachBtn">\u{1F4F7} Attach photo</button>
+        <button class="primary" id="startBtn" ${state.loading ? "disabled" : ""}>${state.loading ? "Thinking..." : "Get started \u2192"}</button>
+      </div>
+      ${state.error ? `<div class="error">${state.error}</div>` : ""}
+    `;
+  } else if (state.screen === "session") {
+    let n = 0;
+    html += `<div>`;
+    state.displaySteps.forEach(s => {
+      if (s.type === "reply") {
+        html += `<div class="replybubble">${escapeHtml(s.text)}</div>`;
+      } else {
+        n++;
+        html += `
+          <div class="step">
+            <div class="tag">${categoryTagLabel(state.category)} \u00B7 Step ${String(n).padStart(2, "0")}</div>
+            <p>${escapeHtml(s.text)}</p>
+          </div>`;
+      }
+    });
+    if (state.loading) html += `<div class="thinking">Thinking through the next step...</div>`;
+    html += `</div>
+      <div class="replyrow">
+        <input id="replyInput" placeholder="What happened when you tried that?" value="${escapeAttr(state.replyText)}" />
+        <button id="sendBtn">\u2713 Send</button>
+      </div>
+      <button class="linklike" id="restartBtn">Start a different task</button>
+    `;
+  } else if (state.screen === "paywall") {
+    html += `
+      <div class="paywall">
+        <div class="lock">\u{1F512}</div>
+        <h2>You've used your 3 free tasks</h2>
+        <p>Keep going with unlimited step-by-step guidance for $6.99/month.</p>
+        <a href="STRIPE_PAYMENT_LINK_GOES_HERE" class="unlockbtn" style="display:inline-block;text-decoration:none;">Unlock unlimited</a>
+      </div>
+    `;
+  }
+
+  if (state.verifyingPayment) {
+    html += `<p class="thinking" style="margin-top:16px;">Confirming your payment...</p>`;
+  }
+
+  app.innerHTML = html;
+
+  document.querySelectorAll("[data-cat]").forEach(el => {
+    el.addEventListener("click", () => setState({ category: el.getAttribute("data-cat") }));
+  });
+  document.querySelectorAll("[data-level]").forEach(el => {
+    el.addEventListener("click", () => setState({ level: el.getAttribute("data-level") }));
+  });
+
+  const problemInput = document.getElementById("problemInput");
+  if (problemInput) problemInput.addEventListener("input", e => { state.problemText = e.target.value; });
+  const fileInput = document.getElementById("fileInput");
+  if (fileInput) fileInput.addEventListener("change", handleImagePick);
+  const attachBtn = document.getElementById("attachBtn");
+  if (attachBtn) attachBtn.addEventListener("click", () => fileInput.click());
+  const removeImgBtn = document.getElementById("removeImgBtn");
+  if (removeImgBtn) removeImgBtn.addEventListener("click", () => setState({ imageBase64: null, imagePreview: null }));
+  const startBtn = document.getElementById("startBtn");
+  if (startBtn) startBtn.addEventListener("click", startFix);
+  const replyInput = document.getElementById("replyInput");
+  if (replyInput) {
+    replyInput.addEventListener("input", e => { state.replyText = e.target.value; });
+    replyInput.addEventListener("keydown", e => { if (e.key === "Enter") sendReply(); });
+  }
+  const sendBtn = document.getElementById("sendBtn");
+  if (sendBtn) sendBtn.addEventListener("click", sendReply);
+  const restartBtn = document.getElementById("restartBtn");
+  if (restartBtn) restartBtn.addEventListener("click", resetToStart);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.innerText = str;
+  return div.innerHTML;
+}
+function escapeAttr(str) { return (str || "").replace(/"/g, "&quot;"); }
+
+render();
+checkForReturningPayment();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
