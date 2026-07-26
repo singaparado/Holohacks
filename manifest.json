@@ -1,9 +1,9 @@
 {
   "name": "Holohacks",
   "short_name": "Holohacks",
-  "description": "Step-by-step AI repair guidance. One clear step at a time.",
-  "start_url": "/",
-  "scope": "/",
+  "description": "Step-by-step guidance for anything you're trying to get done — fixes, cooking, building, daily hacks. One clear step at a time.",
+  "start_url": "/app/",
+  "scope": "/app/",
   "display": "standalone",
   "background_color": "#EDEAE3",
   "theme_color": "#2B2A28",
