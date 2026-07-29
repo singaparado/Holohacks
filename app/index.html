@@ -6,76 +6,183 @@
 <title>Holohacks — Get It Done</title>
 
 <link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#2B2A28" />
+<meta name="theme-color" content="#1F1E1B" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Holohacks" />
 <link rel="apple-touch-icon" href="/icon-192.png" />
 <link rel="icon" href="/icon-192.png" />
 
+<!-- Google Fonts: Humanist Sans + Editorial Serif + Monospaced Accents -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-  :root{
-    --graphite:#2B2A28;
-    --paper:#EDEAE3;
-    --card:#F7F5F0;
-    --amber:#E8A93A;
-    --muted:#6b6862;
-    --muted2:#5c5952;
-    --line:#DDD8CC;
-    --error:#a3402f;
+  :root {
+    /* Warmer, calmer paper tones matching the landing page */
+    --graphite: #1F1E1B;
+    --paper: #E6E2D8;       /* Deeper, warmer antique paper background */
+    --card: #ECE8DE;        /* Subtly lifted card surface */
+    --card-border: #D6D0C2; /* Soft contrast border */
+    --amber: #D98E2B;       /* Grounded warm amber accent */
+    --muted: #736E65;       /* Secondary text */
+    --muted2: #4A4741;      /* Body paragraph text */
+    --line: #D1CBBF;       /* Divider lines */
+    --error: #A3402F;
   }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--paper);color:var(--graphite);font-family:'IBM Plex Mono', monospace;min-height:100vh;}
-  .wrap{max-width:640px;margin:0 auto;padding:32px 20px 80px;}
-  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
-  .brand{display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.15em;text-transform:uppercase;}
-  .brand .dot{color:var(--amber);}
-  .counter{font-size:11px;color:var(--muted);}
-  h1{font-family:Georgia,serif;font-size:29px;line-height:1.15;margin:0 0 8px;}
-  p.sub{font-size:13px;color:var(--muted2);margin:0 0 20px;line-height:1.5;}
 
-  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin:22px 0 10px;}
-  .section-label:first-of-type{margin-top:0;}
+  * { box-sizing: border-box; }
 
-  .chiprow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;}
-  .chip{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 13px;border:1px solid var(--graphite);
-    background:var(--card);cursor:pointer;border-radius:2px;
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--graphite);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
-  .chip.active{background:var(--graphite);color:var(--paper);}
-  .chip .emoji{margin-right:5px;}
 
-  textarea{
-    width:100%;padding:14px;margin-bottom:4px;font-size:13px;font-family:'IBM Plex Mono',monospace;
-    border:1px solid var(--graphite);background:var(--card);resize:none;min-height:100px;
+  .wrap { max-width: 640px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* Navigation & Header */
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .15em; text-transform: uppercase;
   }
-  .row{display:flex;gap:10px;margin:16px 0;}
-  button{font-family:'IBM Plex Mono',monospace;font-size:13px;cursor:pointer;border:1px solid var(--graphite);background:transparent;padding:10px 16px;}
-  button.primary{flex:1;background:var(--graphite);color:var(--paper);border:none;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.05em;}
-  button.primary:disabled{opacity:.6;cursor:default;}
-  .imgpreview{position:relative;border:1px solid var(--graphite);margin-bottom:14px;}
-  .imgpreview img{width:100%;max-height:240px;object-fit:cover;display:block;}
-  .imgpreview .remove{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);border:none;padding:4px 8px;}
-  .error{color:var(--error);font-size:12px;margin-top:4px;}
+  .brand .dot { color: var(--amber); }
+  .counter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    color: var(--muted); letter-spacing: .05em;
+  }
 
-  .step{position:relative;padding:16px;border:1px solid var(--graphite);background:var(--card);margin-bottom:16px;}
-  .tag{position:absolute;top:-11px;left:14px;background:var(--amber);color:var(--graphite);font-size:10px;text-transform:uppercase;letter-spacing:.13em;padding:2px 8px;white-space:nowrap;}
-  .step p{font-size:13px;line-height:1.6;margin:8px 0 0;white-space:pre-wrap;}
-  .replybubble{margin-left:32px;padding:10px 14px;background:var(--line);font-size:13px;margin-bottom:16px;}
-  .thinking{font-size:11px;color:var(--muted);margin-bottom:12px;}
+  /* Headings & Text */
+  h1 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(32px, 6vw, 42px);
+    line-height: 1.1; margin: 0 0 12px;
+  }
+  p.sub { font-size: 15px; color: var(--muted2); margin: 0 0 28px; line-height: 1.6; }
 
-  .replyrow{display:flex;gap:8px;margin-bottom:10px;}
-  .replyrow input{flex:1;padding:12px;font-size:13px;border:1px solid var(--graphite);background:var(--card);font-family:'IBM Plex Mono',monospace;}
-  .linklike{font-size:11px;color:var(--muted2);text-decoration:underline;background:none;border:none;padding:0;cursor:pointer;}
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .15em;
+    color: var(--muted); margin: 24px 0 10px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
 
-  .paywall{text-align:center;padding:60px 0;}
-  .lock{font-size:32px;margin-bottom:12px;}
-  .paywall h2{font-family:Georgia,serif;font-size:24px;margin:0 0 8px;}
-  .paywall p{font-size:13px;color:var(--muted2);margin:0 0 24px;}
-  .unlockbtn{background:var(--graphite);color:var(--paper);padding:14px 28px;text-transform:uppercase;letter-spacing:.05em;border:none;font-size:13px;}
+  /* Interactive Components */
+  .chiprow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+  .chip {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    padding: 9px 14px; border: 1px solid var(--card-border);
+    background: var(--card); cursor: pointer; border-radius: 2px;
+    transition: all 0.15s ease; color: var(--graphite);
+  }
+  .chip:hover { border-color: var(--graphite); }
+  .chip.active { background: var(--graphite); color: var(--paper); border-color: var(--graphite); }
+  .chip .emoji { margin-right: 6px; }
+
+  textarea {
+    width: 100%; padding: 16px; margin-bottom: 6px; font-size: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    border: 1px solid var(--card-border); background: var(--card);
+    color: var(--graphite); resize: none; min-height: 110px;
+    border-radius: 2px; line-height: 1.5; outline: none;
+    transition: border-color 0.2s ease;
+  }
+  textarea:focus { border-color: var(--graphite); }
+
+  .row { display: flex; gap: 10px; margin: 18px 0; }
+  
+  /* Buttons */
+  button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--graphite); background: transparent;
+    padding: 12px 18px; border-radius: 2px; color: var(--graphite);
+    transition: all 0.2s ease;
+  }
+  button:hover { background: rgba(31, 30, 27, 0.05); }
+  
+  button.primary {
+    flex: 1; background: var(--graphite); color: var(--paper);
+    border: 1px solid var(--graphite); display: flex; align-items: center;
+    justify-content: center; gap: 8px; text-transform: uppercase; letter-spacing: .08em;
+  }
+  button.primary:hover { background: #383633; }
+  button.primary:disabled { opacity: .6; cursor: default; background: var(--graphite); }
+
+  .imgpreview { position: relative; border: 1px solid var(--card-border); margin-bottom: 14px; border-radius: 2px; overflow: hidden; }
+  .imgpreview img { width: 100%; max-height: 240px; object-fit: cover; display: block; }
+  .imgpreview .remove {
+    position: absolute; top: 8px; right: 8px; background: rgba(230, 226, 216, 0.95);
+    border: 1px solid var(--graphite); padding: 4px 10px; font-size: 11px;
+  }
+
+  .error { color: var(--error); font-size: 13px; margin-top: 6px; font-weight: 500; }
+
+  /* Session / Steps */
+  .step {
+    position: relative; padding: 22px 20px 20px;
+    border: 1px solid var(--card-border); background: var(--card);
+    margin-bottom: 20px; border-radius: 2px;
+  }
+  .tag {
+    position: absolute; top: -11px; left: 16px;
+    background: var(--amber); color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .13em; padding: 2px 8px; white-space: nowrap;
+  }
+  .step p { font-size: 15px; line-height: 1.6; margin: 6px 0 0; white-space: pre-wrap; color: var(--graphite); }
+  
+  .replybubble {
+    margin-left: 24px; padding: 12px 16px; background: var(--card-border);
+    font-size: 14px; margin-bottom: 20px; border-radius: 2px; color: var(--graphite);
+  }
+  .thinking {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--muted); margin-bottom: 16px; letter-spacing: .05em;
+  }
+
+  .replyrow { display: flex; gap: 8px; margin-bottom: 14px; }
+  .replyrow input {
+    flex: 1; padding: 12px 16px; font-size: 14px;
+    border: 1px solid var(--card-border); background: var(--card);
+    font-family: 'Plus Jakarta Sans', sans-serif; color: var(--graphite);
+    border-radius: 2px; outline: none; transition: border-color 0.2s ease;
+  }
+  .replyrow input:focus { border-color: var(--graphite); }
+
+  .linklike {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); text-decoration: underline; background: none;
+    border: none; padding: 0; cursor: pointer;
+  }
+  .linklike:hover { color: var(--graphite); }
+
+  /* Paywall Screen */
+  .paywall { text-align: center; padding: 60px 0; }
+  .lock { font-size: 36px; margin-bottom: 16px; }
+  .paywall h2 { font-family: 'Instrument Serif', Georgia, serif; font-size: 32px; margin: 0 0 12px; font-weight: 400; }
+  .paywall p { font-size: 15px; color: var(--muted2); margin: 0 0 28px; }
+  .unlockbtn {
+    background: var(--graphite); color: var(--paper); padding: 14px 28px;
+    text-transform: uppercase; letter-spacing: .08em; border: none;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
+    border-radius: 2px; text-decoration: none; display: inline-block;
+  }
+  .unlockbtn:hover { background: #383633; }
 </style>
 </head>
 <body>
@@ -137,10 +244,6 @@ let state = {
 
 function setState(patch) { state = { ...state, ...patch }; render(); }
 
-// On load, check whether we just came back from a successful Stripe payment.
-// Stripe's Payment Link redirects here with ?session_id=... when configured
-// to do so (see README). We verify that session server-side before unlocking,
-// so a person can't just type ?session_id=anything into the URL to unlock free.
 async function checkForReturningPayment() {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get("session_id");
@@ -159,7 +262,6 @@ async function checkForReturningPayment() {
   } catch (e) {
     setState({ verifyingPayment: false, error: "Couldn't verify payment. Refresh and try again." });
   }
-  // Clean the URL so a reload doesn't re-trigger verification.
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
@@ -327,7 +429,7 @@ function render() {
         <div class="lock">\u{1F512}</div>
         <h2>You've used your 3 free tasks</h2>
         <p>Keep going with unlimited step-by-step guidance for $6.99/month.</p>
-        <a href="STRIPE_PAYMENT_LINK_GOES_HERE" class="unlockbtn" style="display:inline-block;text-decoration:none;">Unlock unlimited</a>
+        <a href="STRIPE_PAYMENT_LINK_GOES_HERE" class="unlockbtn">Unlock unlimited</a>
       </div>
     `;
   }
